@@ -25,7 +25,7 @@ public class Game {
         this.dev = dev;
         this.publisher = publisher;
         this.genreRaw = genreRaw;
-        this.genre = genreRaw.split("|");    
+        this.genre = genreRaw.split("\\|");    
         this.addInstance(country, category, status);
     }
     
@@ -87,6 +87,24 @@ public class Game {
         return this.genreRaw;  
     }
     
+    public Boolean isGenre(String target){  
+        //println(target);
+        //println(genreRaw);
+        for(String s : genre){
+            if(s.equals(target)){
+                return true;    
+            }
+        }
+        return false; 
+        
+    }
+    
+    public Boolean isNation(String target){
+        if(country.contains(target)){
+            return(true);
+        }
+        return false;  
+    }
     
     
     
