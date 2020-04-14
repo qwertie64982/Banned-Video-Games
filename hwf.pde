@@ -1,28 +1,34 @@
 import org.gicentre.geomap.*;
 
 GeoMap geoMap;                // Declare the geoMap object.
-ArrayList<Game> games; // arraylist of game objects
-ArrayList<String> genres; // arraylist of genre names
+ArrayList<Game> games;        // arraylist of game objects
+ArrayList<String> genres;     // arraylist of genre names
 //ArrayList<String> categories;
 //ArrayList<String> statusTypes;
 //ArrayList<Nation> nations;
 ArrayList<String> mapNations; // arraylist of names in the geomap
-ArrayList<String> places; // arraylist of nations from the other listS
+ArrayList<String> places;     // arraylist of nations from the other listS
 
-float myMouseX; // variables save selected mouse position
-float myMouseY; 
+float myMouseX;     // selected mouse position X
+float myMouseY;     // selected mouse position Y
 float padding = 10; // screen padding
 //int selected;
 //float maxG;
 //float maxN;
-float maxGenre; // variable stores largest number of games in a genre
+float maxGenre;     // stores the maximum number of games in a genre, across all genres
+
+// Colors (very good for all forms of colorblindness)
+color oceanColor = color(182, 219, 255); // 0xB6DBFF
+color boundaryColor = color(0, 40); // 0x00000028 gray 0, opacity 40%
+color noDataColor = color(180); // 0xB4B4B4
+color yesDataColor = color(219, 109, 0); // 0xDB6D00
+color selectedColor = color(146, 73, 0); // 0x924900
 
 
 // Processing setup
 void setup() {
     // Processing basic setup
     size(1024, 768); // creates output window size
-    
     textSize(16);
     textAlign(CENTER);
     Table data = loadTable("Games.csv", "header");
@@ -34,46 +40,61 @@ void setup() {
     geoMap = new GeoMap(0, 0, width, height/2, this);
     geoMap.readFile("world");   // Reads shapefile.
 
+    // Initialize data
     games = new ArrayList<Game>();
     genres = new ArrayList<String>();
     mapNations = new ArrayList<String>();
     places = new ArrayList<String>();
 
-    for (TableRow r : data.rows()) {
-
+    // Load data
+    for (TableRow r : data.rows()) { // for each entry in the ban list
+        // Make a list of every genre
         for (String s : r.getString("Genre").split("\\|") ) {
-
-            if (!genres.contains(s)) { // adds genre to the list
+            if (!genres.contains(s)) {
                 genres.add(s);
             }
         }
-        if (!places.contains(r.getString("Country"))) { // adds country name to list
+        
+        // Make a list of every country
+        if (!places.contains(r.getString("Country"))) {
             places.add(r.getString("Country"));
         }
 
-        if (!gameTitles.contains(r.getString("Game"))) { // creates game   
+        // Make a list of every game
+        if (!gameTitles.contains(r.getString("Game"))) { // if we haven't seen this game yet, add it, as well as all accompanying data 
             gameTitles.add(r.getString("Game"));            
-            Game g = new Game(r.getString("Game"), r.getString("Series"), r.getString("Country"), r.getString("Ban Category"), r.getString("Ban Status"), r.getString("Developer"), r.getString("Publisher"), r.getString("Genre"));
+            Game g = new Game(r.getString("Game"),
+                              r.getString("Series"),
+                              r.getString("Country"),
+                              r.getString("Ban Category"),
+                              r.getString("Ban Status"),
+                              r.getString("Developer"),
+                              r.getString("Publisher"),
+                              r.getString("Genre"));
             games.add(g);
-        } else { // adds info to game object 
-            games.get(gameTitles.indexOf(r.getString("Game"))).addInstance(r.getString("Country"), r.getString("Ban Category"), r.getString("Ban Status"));
+        } else { // if we have seen this game before, add the new accompanying data (ex. multiple countries banned the same game)
+            games.get(gameTitles.indexOf(r.getString("Game"))).addInstance(r.getString("Country"),
+                                                                           r.getString("Ban Category"),
+                                                                           r.getString("Ban Status"));
         }
     }
 
-    for (int id : geoMap.getFeatures().keySet()) {
-        mapNations.add(geoMap.getAttributeTable().findRow(str(id), 0).getString("NAME"));
+    // Create mapNations, a list of every nation's name
+    for (int id : geoMap.getFeatures().keySet()) { // for every nation's numeric ID (from geoMap)
+        mapNations.add(geoMap.getAttributeTable().findRow(str(id), 0).getString("NAME")); // add its corresponding string name to mapNations
     }
+    
+    // Calculate maxGenre
     float gameCount;
     maxGenre = 0;
-    
-    for (String genre : genres) {
+    for (String genre : genres) { // for each genre
         gameCount = 0;
-        for (Game g : games) {
+        for (Game g : games) { // for each game, sum how many games
             if (g.isGenre(genre)) {
                 gameCount++;
             }
         }
-        if (maxGenre < gameCount) {
+        if (maxGenre < gameCount) { // only keep the biggest number we find
             maxGenre = gameCount;
         }
     }
@@ -82,47 +103,48 @@ void setup() {
 // Processing 
 void draw() {
     clear();
-    //background(250);
     fill(0);
     drawMap();
-    
-   
 }
 
-// draws the map
+// Draw map
 void drawMap() {
-    // TODO change colors so that they differ from tutorial.
-
-    background(202, 226, 245);  // Ocean color
-    stroke(0, 40);               // Boundary color
+    background(oceanColor);
+    stroke(boundaryColor);
     String countryName;  
     String tempName;
-    int id = geoMap.getID(myMouseX, myMouseY); // get selected countries id
+    int id = geoMap.getID(myMouseX, myMouseY); // Selected country's id
 
-
-    for (int i : geoMap.getFeatures().keySet()) { // draws map but leaves nations not in the data set as white
-        tempName = (geoMap.getAttributeTable().findRow(str(i), 0).getString("NAME"));    
-        if (places.contains(tempName) || tempName.equals("S. Korea")) {
-            fill(206, 173, 146);
+    // Draw each country
+    for (int i : geoMap.getFeatures().keySet()) {
+        tempName = (geoMap.getAttributeTable().findRow(str(i), 0).getString("NAME"));
+        if (tempName == "S. Korea") {
+            tempName = "South Korea";
+        }
+        if (places.contains(tempName)) {
+            fill(yesDataColor);
         } else {
-            fill(255);
+            fill(noDataColor);
         }
         geoMap.draw(i);
     }
 
-    if (id != -1) { // recolors country when clicked on
-        fill(180, 120, 120);      // Highlighted land color
+    // If country is clicked, change its color
+    // TODO: Let's make gray countries turn darker gray and display "no data"
+    // TODO: Perhaps if we click a country it toggles, so when no country is selected, we show world data on the bar chart
+    if (id != -1) {
+        fill(selectedColor);
         geoMap.draw(id);
         countryName = geoMap.getAttributeTable().findRow(str(id), 0).getString("NAME");
-        if (countryName.equals("S. Korea")) { // South Korea is named something else in our dataset
-            println("test");
+        if (countryName.equals("S. Korea")) { // Dataset: "South Korea", geoMap: "S. Korea"
             countryName = "South Korea";
         }
-        drawGenre(countryName); // draw barchart
+        drawGenre(countryName); // draw genre barchart
     }
 }
-// draws genre's below the screen
-// x-axis is genre y-axis is games per category in a selected country
+
+// Draws barchart of games/genre on the bottom
+// x-axis is genres, y-axis is games, all within the selected country
 void drawGenre(String name) {
     float barWidth = map(1, 0, genres.size(), 0, width - (padding * 2));
     float position = padding; // current postion
@@ -130,7 +152,7 @@ void drawGenre(String name) {
     float gameCount;
     float temp; // stores gameCount scaled to barheight
     
-    for (String genre : genres) {
+    for (String genre : genres) { // for each genre
         gameCount = 0;
         for (Game g : games) {
             if (g.isGenre(genre) && (g.isNation(name))) {
@@ -143,11 +165,11 @@ void drawGenre(String name) {
         rect(position, height - temp - padding, barWidth, temp); // draw upper bar 
         position += barWidth;
     }
-    //drawLines(barHeight, int(maxGenre) + 1);
+    // drawLines(barHeight, int(maxGenre) + 1);
 }
 
 
-// selects new items.
+// Processing mouseClicked
 void mouseClicked(){
    myMouseX = mouseX;
    myMouseY = mouseY;
