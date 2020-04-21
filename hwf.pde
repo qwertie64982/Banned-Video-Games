@@ -103,13 +103,17 @@ void setup() {
 // Processing 
 void draw() {
     clear();
-    fill(0);
     drawMap();
 }
 
 // Draw map
 void drawMap() {
     background(oceanColor);
+    
+    // Black background for barchart
+    fill(noDataColor);
+    rect(0, height/2, width, height/2);
+    
     stroke(boundaryColor);
     String countryName;  
     String tempName;
@@ -147,10 +151,13 @@ void drawMap() {
 // x-axis is genres, y-axis is games, all within the selected country
 void drawGenre(String name) {
     float barWidth = map(1, 0, genres.size(), 0, width - (padding * 2));
-    float position = padding; // current postion
-    float barHeight = map(1, 0, maxGenre, 0, height/2 - (padding * 10));
+    float position = padding; // current x location, starts padding distance from end
+    float barHeightUnit = map(1, 0, maxGenre, 0, height/2 - padding*15); // height of 1 game in any bar, 15 because 10 padding on bottom, one on top
     float gameCount;
-    float temp; // stores gameCount scaled to barheight
+    float barHeight;
+    
+    fill(noDataColor);
+    rect(0, height/2, width, height/2);
     
     for (String genre : genres) { // for each genre
         gameCount = 0;
@@ -160,11 +167,27 @@ void drawGenre(String name) {
             }
         }
 
-        fill(52, 158, 206);
-        temp = gameCount * barHeight;
-        rect(position, height - temp - padding, barWidth, temp); // draw upper bar 
-        position += barWidth;
+        fill(yesDataColor);
+        barHeight = gameCount * barHeightUnit;
+        rect(position, height - barHeight - padding*14, barWidth, barHeight); // draw upper bar
+        
+        position += barWidth/2;
+        pushMatrix();
+        fill(0);
+        translate(position, height - padding*13);
+        rotate(5 * PI/12); // halfway between 60 and 90 degrees down
+        textSize(12);
+        textAlign(LEFT, CENTER);
+        //fill(textColor);
+        text(genre, 0, 0);
+        popMatrix();
+        fill(yesDataColor);
+        position += barWidth/2;
     }
+    // test to see how high bars go
+    // barHeight = 34 * barHeightUnit;
+    // rect(padding, height-barHeight-padding*14, barWidth, barHeight);
+    
     // drawLines(barHeight, int(maxGenre) + 1);
 }
 
