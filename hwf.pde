@@ -1,13 +1,13 @@
 import org.gicentre.geomap.*;
 
-GeoMap geoMap;                // Declare the geoMap object.
-ArrayList<Game> games;        // arraylist of game objects
-ArrayList<String> genres;     // arraylist of genre names
+GeoMap geoMap;                // declare the geoMap object
+ArrayList<Game> games;        // arrayList of game objects
+ArrayList<String> genres;     // arrayList of genre names
 //ArrayList<String> categories;
 //ArrayList<String> statusTypes;
 //ArrayList<Nation> nations;
 ArrayList<String> mapNations; // arraylist of names in the geomap
-ArrayList<String> places;     // arraylist of nations from the other listS
+ArrayList<String> places;     // arraylist of nations from the other lists
 
 float myMouseX;     // selected mouse position X
 float myMouseY;     // selected mouse position Y
@@ -23,6 +23,7 @@ color boundaryColor = color(0, 40); // 0x00000028 gray 0, opacity 40%
 color noDataColor = color(180); // 0xB4B4B4
 color yesDataColor = color(219, 109, 0); // 0xDB6D00
 color selectedColor = color(146, 73, 0); // 0x924900
+color selectedNoneColor = color(123); // 0x7B7B7B
 
 
 // Processing setup
@@ -85,19 +86,25 @@ void setup() {
     }
     
     // Calculate maxGenre
+    // Specifically, this is the max number of banned games in any genre by any single country
     float gameCount;
     maxGenre = 0;
-    for (String genre : genres) { // for each genre
-        gameCount = 0;
-        for (Game g : games) { // for each game, sum how many games
-            if (g.isGenre(genre)) {
-                gameCount++;
+    for (String place : places) { // for each country
+        // we don't need to worry about the name for South Korea here, since we're just checking back into the dataset
+        for (String genre : genres) { // for each genre
+            gameCount = 0;
+            for (Game g : games) { // for each game, sum how many games
+                if (g.isGenre(genre) && g.isNation(place)) {
+                    gameCount++;
+                }
+            }
+            if (maxGenre < gameCount) { // only keep the biggest number we find
+                maxGenre = gameCount;
+                // println(place); // who banned the most games? (the bottom one)
             }
         }
-        if (maxGenre < gameCount) { // only keep the biggest number we find
-            maxGenre = gameCount;
-        }
     }
+    // println(maxGenre);
 }
 
 // Processing 
@@ -137,12 +144,16 @@ void drawMap() {
     // TODO: Let's make gray countries turn darker gray and display "no data"
     // TODO: Perhaps if we click a country it toggles, so when no country is selected, we show world data on the bar chart
     if (id != -1) {
-        fill(selectedColor);
-        geoMap.draw(id);
         countryName = geoMap.getAttributeTable().findRow(str(id), 0).getString("NAME");
         if (countryName.equals("S. Korea")) { // Dataset: "South Korea", geoMap: "S. Korea"
             countryName = "South Korea";
         }
+        if (places.contains(countryName)) {
+            fill(selectedColor);
+        } else {
+            fill(selectedNoneColor);
+        }
+        geoMap.draw(id);
         drawGenre(countryName); // draw genre barchart
     }
 }
@@ -185,8 +196,9 @@ void drawGenre(String name) {
         position += barWidth/2;
     }
     // test to see how high bars go
-    // barHeight = 34 * barHeightUnit;
-    // rect(padding, height-barHeight-padding*14, barWidth, barHeight);
+    // fill(255, 0, 0);
+    // barHeight = maxGenre * barHeightUnit;
+    // rect(padding, height - barHeight - padding*14, barWidth, barHeight);
     
     // drawLines(barHeight, int(maxGenre) + 1);
 }
