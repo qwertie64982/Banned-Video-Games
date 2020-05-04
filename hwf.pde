@@ -3,19 +3,14 @@ import org.gicentre.geomap.*;
 GeoMap geoMap;                // declare the geoMap object
 ArrayList<Game> games;        // arrayList of game objects
 ArrayList<String> genres;     // arrayList of genre names
-//ArrayList<String> categories;
-//ArrayList<String> statusTypes;
-//ArrayList<Nation> nations;
 ArrayList<String> mapNations; // arraylist of names in the geomap
 ArrayList<String> places;     // arraylist of nations from the other lists
 
 float myMouseX;     // selected mouse position X
 float myMouseY;     // selected mouse position Y
 float padding = 10; // screen padding
-//int selected;
-//float maxG;
-//float maxN;
 float maxGenre;     // stores the maximum number of games in a genre, across all genres
+float maxGlobalGenre;
 
 // Colors (very good for all forms of colorblindness)
 color oceanColor = color(182, 219, 255); // 0xB6DBFF
@@ -24,7 +19,6 @@ color noDataColor = color(180); // 0xB4B4B4
 color yesDataColor = color(219, 109, 0); // 0xDB6D00
 color selectedColor = color(146, 73, 0); // 0x924900
 color selectedNoneColor = color(123); // 0x7B7B7B
-
 
 // Processing setup
 void setup() {
@@ -88,23 +82,35 @@ void setup() {
     // Calculate maxGenre
     // Specifically, this is the max number of banned games in any genre by any single country
     float gameCount;
+    float totalCount; // total number of games per genre
     maxGenre = 0;
+    maxGlobalGenre = 0;
     for (String place : places) { // for each country
-        // we don't need to worry about the name for South Korea here, since we're just checking back into the dataset
+        // we don't need to worry about the name for South Korea here, since we're just checking back into the dataset        
         for (String genre : genres) { // for each genre
             gameCount = 0;
+            totalCount = 0;
+            
             for (Game g : games) { // for each game, sum how many games
-                if (g.isGenre(genre) && g.isNation(place)) {
-                    gameCount++;
+                if (g.isGenre(genre)){ 
+                    totalCount++; // total per genre
+                    if (g.isNation(place)) { // total per genere and nation
+                        gameCount++;
+                    }        
                 }
             }
             if (maxGenre < gameCount) { // only keep the biggest number we find
                 maxGenre = gameCount;
-                // println(place); // who banned the most games? (the bottom one)
+                //println(place); // who banned the most games? (the bottom one)
+                //println(genre);
             }
+            
+            if(maxGlobalGenre < totalCount){ // Same thing as above but on a golbal scale.
+                maxGlobalGenre = totalCount;    
+            }            
         }
     }
-    // println(maxGenre);
+    println(maxGlobalGenre);
 }
 
 // Processing 
@@ -125,11 +131,11 @@ void drawMap() {
     String countryName;  
     String tempName;
     int id = geoMap.getID(myMouseX, myMouseY); // Selected country's id
-
+    
     // Draw each country
     for (int i : geoMap.getFeatures().keySet()) {
         tempName = (geoMap.getAttributeTable().findRow(str(i), 0).getString("NAME"));
-        if (tempName == "S. Korea") {
+        if (tempName.equals("S. Korea")) { // Dataset: "South Korea", geoMap: "S. Korea"
             tempName = "South Korea";
         }
         if (places.contains(tempName)) {
@@ -148,28 +154,60 @@ void drawMap() {
         if (countryName.equals("S. Korea")) { // Dataset: "South Korea", geoMap: "S. Korea"
             countryName = "South Korea";
         }
+
         if (places.contains(countryName)) {
-            fill(selectedColor);
-        } else {
+            fill(selectedColor);  
+        } else { // case if country is not in dataset
             fill(selectedNoneColor);
         }
         geoMap.draw(id);
         drawGenre(countryName); // draw genre barchart
+        
+    } else {
+        drawGlobalGenre();  // draw genre barchart for world
     }
+        
 }
+
+// draws genres for the entire planet
+void drawGlobalGenre(){
+    
+    float barWidth = map(1, 0, genres.size(), 0, width - (padding * 4));
+    float position = padding * 3; // current x location, starts padding distance from end
+    float barHeightUnit = map(1, 0, maxGlobalGenre, 0, height/2 - padding*17); // height of 1 game in any bar, 15 because 10 padding on bottom, one on top
+    float gameCount;
+    float barHeight;    
+    fill(noDataColor);
+    rect(0, height/2, width, height/2);
+    for (String genre : genres) { // for each genre
+        gameCount = 0;
+        for (Game g : games) {
+            if (g.isGenre(genre)) { 
+                gameCount++;
+            }
+        }
+        fill(yesDataColor);
+        barHeight = gameCount * barHeightUnit;
+        rect(position, height - barHeight - padding*14, barWidth, barHeight); // draw upper bar
+        position += barWidth/2;
+        labelGenre(genre, position);
+        position += barWidth/2;
+    } 
+    drawLines("Global", barHeightUnit, 5, maxGlobalGenre);
+}
+
 
 // Draws barchart of games/genre on the bottom
 // x-axis is genres, y-axis is games, all within the selected country
 void drawGenre(String name) {
-    float barWidth = map(1, 0, genres.size(), 0, width - (padding * 2));
-    float position = padding; // current x location, starts padding distance from end
-    float barHeightUnit = map(1, 0, maxGenre, 0, height/2 - padding*15); // height of 1 game in any bar, 15 because 10 padding on bottom, one on top
+    float barWidth = map(1, 0, genres.size(), 0, width - (padding * 4));
+    float position = padding * 3; // current x location, starts padding distance from end
+    float barHeightUnit = map(1, 0, maxGenre, 0, height/2 - padding * 17); // height of 1 game in any bar, 17 because 10 padding on bottom, three on top 
     float gameCount;
     float barHeight;
     
     fill(noDataColor);
     rect(0, height/2, width, height/2);
-    
     for (String genre : genres) { // for each genre
         gameCount = 0;
         for (Game g : games) {
@@ -177,12 +215,23 @@ void drawGenre(String name) {
                 gameCount++;
             }
         }
-
         fill(yesDataColor);
         barHeight = gameCount * barHeightUnit;
         rect(position, height - barHeight - padding*14, barWidth, barHeight); // draw upper bar
         
         position += barWidth/2;
+        labelGenre(genre, position);
+        position += barWidth/2;
+    }
+    // test to see how high bars go
+    // fill(255, 0, 0);
+    // barHeight = maxGenre * barHeightUnit;
+    // rect(padding, height - barHeight - padding*14, barWidth, barHeight);
+    drawLines(name, barHeightUnit, 1, maxGenre);
+}
+
+// labels the x-axis
+void labelGenre(String genre, float position){
         pushMatrix();
         fill(0);
         translate(position, height - padding*13);
@@ -193,175 +242,28 @@ void drawGenre(String name) {
         text(genre, 0, 0);
         popMatrix();
         fill(yesDataColor);
-        position += barWidth/2;
-    }
-    // test to see how high bars go
-    // fill(255, 0, 0);
-    // barHeight = maxGenre * barHeightUnit;
-    // rect(padding, height - barHeight - padding*14, barWidth, barHeight);
+}
+
+// labels the y-axis and title. Barhieght is the height of the bar. Increment indicates what the difference between each label will be. MaxVal is the height of the graph.
+void drawLines(String title, float barHeight, int increment, float maxVal) { // draws lines.
+    fill(0);    
+    textAlign(CENTER, CENTER);
+    textSize(16);
+    text(title, width/2, (height/2) + padding); // name of the country or global   
     
-    // drawLines(barHeight, int(maxGenre) + 1);
+    stroke(0);
+    textSize(12);   
+    textAlign(RIGHT, CENTER);
+    line(padding * 3, (height - padding*14), padding * 3, (height/2) + (padding * 2));
+    for (int i = 0; i <= maxVal; i += increment) {
+        text(i, padding * 2, (height - padding*14) - (barHeight * i)); // y-axis label     
+        line(padding * 2.5, (height - padding*14) - (barHeight * i), width - padding, (height - padding*14) - (barHeight * i));
+    }
 }
 
 
 // Processing mouseClicked
 void mouseClicked(){
    myMouseX = mouseX;
-   myMouseY = mouseY;
+   myMouseY = mouseY;   
 }
-
-
-// older code that we are not using but I saved in case we wanted a jumping off point for additional features.
-/*
-void drawGenre() {    
-    float barWidth = map(1, 0, genres.size(), 0, width - (padding * 2));
-    float position = padding; // current postion
-    float barHeight = map(1, 0, maxGenre, 0, height - (padding * 10));
-    float gameCount;
-    for (String genre : genres) {
-        gameCount = 0;
-        for (Game g : games) {
-            if (g.isGenre(genre)) {
-                gameCount++;
-            }
-        }
-
-        fill(52, 158, 206);
-        float temp = gameCount * barHeight;
-        rect(position, height - temp - padding, barWidth, temp); // draw upper bar 
-        position += barWidth;
-    }
-    drawLines(barHeight, int(maxGenre) + 1);
-}
-
-void drawLines(float barHeight, int maxVal) {
-    stroke(0);
-    for (int i = 0; i < maxVal; i++) {
-        line(padding, height - (barHeight * i) - padding, width - padding, height - (barHeight * i) - padding);
-    }
-}
-
-
-void drawNations() {
-
-    float barWidth = map(1, 0, nations.size(), 0, width - (padding * 2));
-    float position = padding; // current postion
-    float barHeight = map(1, 0, maxN, 0, height - (padding * 10));
-    for (Nation n : nations) { 
-        fill(222, 36, 36);
-        float temp = n.getGameCount() * barHeight;
-        rect(position, height - temp - padding, barWidth, temp); // draw upper bar 
-        position += barWidth;
-    }    
-    drawLines(barHeight, int(maxN) + 1);
-}
-
-
-
-void drawGames() {
-    float barWidth = map(1, 0, games.size(), 0, width - (padding * 2));
-    float position = padding; // current postion
-    float barHeight = map(1, 0, maxG, 0, height - (padding * 10));
-
-    for (Game g : games) {
-
-        fill(52, 158, 206);
-        float temp = g.getBannedCount() * barHeight;
-        rect(position, height - temp - padding, barWidth, temp); // draw upper bar 
-        position += barWidth;
-    }    
-    drawLines(barHeight, int(maxG) + 1);
-}
-*/
-/*
-void setup() {
-    // Processing basic setup
-    size(1024, 768); // creates output window size
-    
-    textSize(16);
-    textAlign(CENTER);
-    selected = 2;
-    maxG = 0;
-    maxN = 0;
-    Table data = loadTable("Games.csv", "header");
-    places = new ArrayList<String>();
-    ArrayList<String> names = new ArrayList<String>();
-    myX = 0;
-    myY = 0;
-    geoMap = new GeoMap(0, 0, width, height/2, this);
-    geoMap.readFile("world");   // Reads shapefile.
-
-    games = new ArrayList<Game>();
-    nations = new ArrayList<Nation>();
-    genres = new ArrayList<String>();
-    categories = new ArrayList<String>();
-    statusTypes = new ArrayList<String>();  
-    mapNations = new ArrayList<String>();
-
-    for (TableRow r : data.rows()) {
-
-        for (String s : r.getString("Genre").split("\\|") ) {
-
-            if (!genres.contains(s)) { // adds genre to the list
-
-                genres.add(s);
-            }
-        }
-
-        if (!categories.contains(r.getString("Ban Category"))) { // adds category to list 
-            categories.add(r.getString("Ban Category"));
-        }
-        if (!statusTypes.contains(r.getString("Ban Status"))) { // adds status type to list 
-            statusTypes.add(r.getString("Ban Status"));
-        }
-        if (!places.contains(r.getString("Country"))) { // adds country name to list
-            places.add(r.getString("Country"));
-            nations.add(new Nation(r.getString("Country")));
-        }
-
-        if (!names.contains(r.getString("Game"))) { // creates game   
-            names.add(r.getString("Game"));            
-            Game g = new Game(r.getString("Game"), r.getString("Series"), r.getString("Country"), r.getString("Ban Category"), r.getString("Ban Status"), r.getString("Developer"), r.getString("Publisher"), r.getString("Genre"));
-            int x = places.indexOf(r.getString("Country"));
-            nations.get(x).addGame(g);
-            games.add(g);
-        } else { // adds info to game object 
-            int i = names.indexOf(r.getString("Game"));
-            games.get(i).addInstance(r.getString("Country"), r.getString("Ban Category"), r.getString("Ban Status"));
-            int x = places.indexOf(r.getString("Country"));
-            nations.get(x).addGame(games.get(i));
-        }
-    }
-
-    for (int id : geoMap.getFeatures().keySet()) {
-        mapNations.add(geoMap.getAttributeTable().findRow(str(id), 0).getString("NAME"));
-    }
-
-    for (Game g : games) {
-        if (maxG < g.getBannedCount()) {
-            maxG = g.getBannedCount();
-        }
-    }
-
-    for (Nation n : nations) {
-        if (maxN < n.getGameCount()) {
-            maxN = n.getGameCount();
-        }
-    }
-    float gameCount;
-    maxGenre = 0;
-    ;
-
-    for (String genre : genres) {
-        gameCount = 0;
-        for (Game g : games) {
-            if (g.isGenre(genre)) {
-                gameCount++;
-            }
-        }
-        if (maxGenre < gameCount) {
-            maxGenre = gameCount;
-        }
-    }
-}
-*/
