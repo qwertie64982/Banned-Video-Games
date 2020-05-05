@@ -21,7 +21,7 @@ float maxGenre;       // stores the maximum number of games censored by a single
 float maxGlobalGenre; // stores the maximum number of games censored globally in any given genre
 
 // Colors (very good for all forms of colorblindness except grayscale)
-color oceanColor = color(182, 219, 255);  // 0xB6DBFF
+color oceanColor = color(182, 219, 255);  // 0xB6DBFFl
 color boundaryColor = color(0, 40);       // 0x00000028 gray 0, opacity 40%
 color noDataColor = color(180);           // 0xB4B4B4
 color lowDataColor = color(219, 150, 81); // 0xDB9651
@@ -264,7 +264,7 @@ void labelGenre(String genre, float position){
         fill(selectedColor);
 }
 
-// Labels the y-axis and title
+// Labels the y-axis, title, and legend
 // increment is the height of one unit of bar
 // maxVal is is largest value possible for any bar
 void drawLabels(String title, float barHeight, int increment, float maxVal) {
@@ -274,15 +274,15 @@ void drawLabels(String title, float barHeight, int increment, float maxVal) {
     fill(lowDataColor); 
     rect(width/4, height/2 + padding,15,15);
     fill(0);
-    text("less than 10", width/4 + padding, height/2+padding);
+    text("1-10", width/4 + padding, height/2+padding);
     fill(medDataColor);
     rect(width/2, height/2 + padding,15,15);
     fill(0);
-    text("less than 25", width/2 + padding, height/2+padding);
+    text("11-25", width/2 + padding, height/2+padding);
     fill(hiDataColor);
     rect(width - width/4, height/2 + padding,15,15);
     fill(0);
-    text("greater than 25", width/2 + width/4 + padding, height/2+padding);
+    text(">25", width/2 + width/4 + padding, height/2+padding);
     rectMode(CORNER);
     
     textAlign(CENTER, CENTER);
@@ -297,9 +297,6 @@ void drawLabels(String title, float barHeight, int increment, float maxVal) {
         line(padding * 2.5, (height - padding*14) - (barHeight * i), width - padding, (height - padding*14) - (barHeight * i));
     }
 }
-
-
-
 
 // Processing mouseClicked
 void mouseClicked(){
