@@ -1,3 +1,8 @@
+// Maxwell Sherman & Vincent Lombardi
+// Final Project: Censored Games
+// CPSC 313-01 Data Visualization
+// 2020-05-04
+
 public class Nation {
     private String countryName;
     private ArrayList<Game> games;

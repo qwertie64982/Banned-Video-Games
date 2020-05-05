@@ -1,7 +1,7 @@
 // Maxwell Sherman & Vincent Lombardi
-// Homework 4: Earthquakes
+// Final Project: Censored Games
 // CPSC 313-01 Data Visualization
-// 2020-02-26
+// 2020-05-04
 
 public class Game {
     private String title;
