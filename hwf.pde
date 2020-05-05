@@ -37,7 +37,7 @@ int hiDataCutoff = 25;
 // Processing setup
 void setup() {
     // Processing basic setup
-    size(1024, 768); // creates output window size
+    size(1024, 1000); // creates output window size 768
     textSize(16);
     textAlign(CENTER);
     Table data = loadTable("Games.csv", "header");
@@ -195,7 +195,7 @@ void drawMap() {
 void drawGenre(String name) {
     float barWidth = map(1, 0, genres.size(), 0, width - (padding * 4));
     float position = padding * 3; // current x location, starts padding distance from end
-    float barHeightUnit = map(1, 0, maxGenre, 0, height/2 - padding * 17); // height of 1 game in any bar, 17 because 10 padding on bottom, three on top 
+    float barHeightUnit = map(1, 0, maxGenre, 0, height/2 - padding * 20); // height of 1 game in any bar, 17 because 10 padding on bottom, three on top 
     float gameCount;
     float barHeight;
     
@@ -228,7 +228,7 @@ void drawGenre(String name) {
 void drawGlobalGenre(){
     float barWidth = map(1, 0, genres.size(), 0, width - (padding * 4));
     float position = padding * 3; // current x location, starts padding distance from end
-    float barHeightUnit = map(1, 0, maxGlobalGenre, 0, height/2 - padding*17); // height of 1 game in any bar, 15 because 10 padding on bottom, one on top
+    float barHeightUnit = map(1, 0, maxGlobalGenre, 0, height/2 - padding*20); // height of 1 game in any bar, 15 because 10 padding on bottom, one on top
     float gameCount;
     float barHeight;
     fill(noDataColor);
@@ -268,20 +268,37 @@ void labelGenre(String genre, float position){
 // increment is the height of one unit of bar
 // maxVal is is largest value possible for any bar
 void drawLabels(String title, float barHeight, int increment, float maxVal) {
-    fill(0);
-    textAlign(CENTER, CENTER);
+    // Legend
+    rectMode(CENTER);
     textSize(16);
-    text(title, width/2, (height/2) + padding); // name of the country (or "Global")
+    fill(lowDataColor); 
+    rect(width/4, height/2 + padding,15,15);
+    fill(0);
+    text("less than 10", width/4 + padding, height/2+padding);
+    fill(medDataColor);
+    rect(width/2, height/2 + padding,15,15);
+    fill(0);
+    text("less than 25", width/2 + padding, height/2+padding);
+    fill(hiDataColor);
+    rect(width - width/4, height/2 + padding,15,15);
+    fill(0);
+    text("greater than 25", width/2 + width/4 + padding, height/2+padding);
+    rectMode(CORNER);
+    
+    textAlign(CENTER, CENTER);
+    text(title, width/2, (height/2) + padding * 4); // name of the country (or "Global")
     
     stroke(0);
     textSize(12);
     textAlign(RIGHT, CENTER);
-    line(padding * 3, (height - padding*14), padding * 3, (height/2) + (padding * 2));
+    line(padding * 3, (height - padding*14), padding * 3, (height/2) + (padding * 6));
     for (int i = 0; i <= maxVal; i += increment) {
         text(i, padding * 2, (height - padding*14) - (barHeight * i) - 2); // y-axis label; -2 because they were a couple px too low
         line(padding * 2.5, (height - padding*14) - (barHeight * i), width - padding, (height - padding*14) - (barHeight * i));
     }
 }
+
+
 
 
 // Processing mouseClicked
