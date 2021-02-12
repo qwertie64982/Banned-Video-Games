@@ -108,7 +108,7 @@ void setup() {
             totalCount = 0;
             
             for (Game g : games) { // for each game, sum how many games
-                if (g.isGenre(genre)){ 
+                if (g.isGenre(genre)) { 
                     totalCount++; // total per genre
                     if (g.isNation(place)) { // total per genere and nation
                         gameCount++;
@@ -122,7 +122,7 @@ void setup() {
                 //println(genre);
             }
             
-            if(maxGlobalGenre < totalCount){ // Same thing as above but on a golbal scale.
+            if (maxGlobalGenre < totalCount) { // Same thing as above but on a golbal scale.
                 maxGlobalGenre = totalCount;    
             }            
         }
@@ -225,7 +225,7 @@ void drawGenre(String name) {
 }
 
 // Draws barchart of games/genre on the bottom (global)
-void drawGlobalGenre(){
+void drawGlobalGenre() {
     float barWidth = map(1, 0, genres.size(), 0, width - (padding * 4));
     float position = padding * 3; // current x location, starts padding distance from end
     float barHeightUnit = map(1, 0, maxGlobalGenre, 0, height/2 - padding*20); // height of 1 game in any bar, 15 because 10 padding on bottom, one on top
@@ -251,7 +251,7 @@ void drawGlobalGenre(){
 }
 
 // Labels the x-axis
-void labelGenre(String genre, float position){
+void labelGenre(String genre, float position) {
         pushMatrix();
         fill(0);
         translate(position, height - padding*13);
@@ -299,7 +299,7 @@ void drawLabels(String title, float barHeight, int increment, float maxVal) {
 }
 
 // Processing mouseClicked
-void mouseClicked(){
+void mouseClicked() {
    myMouseX = mouseX;
    myMouseY = mouseY;
 }

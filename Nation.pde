@@ -19,7 +19,7 @@ public class Nation {
         games.add(game);
     }
     
-    public float getGameCount(){
+    public float getGameCount() {
         return games.size();    
     }
 
