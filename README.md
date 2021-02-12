@@ -1,4 +1,4 @@
-﻿# Data-Vis-Final-Project
+﻿# Banned-Video-Games
 Visualize where and why video games were banned/censored around the world! 
 
 ## Setup
